@@ -1,20 +1,19 @@
 import React, { useMemo } from 'react';
-import usePuzzleLayout from './puzzle.js'
-
-const DIRECTION_VECTORS = {
-    0: { x: 0,  y: -1 },
-    1: { x: 1,  y: -1 },
-    2: { x: 1,  y: 0 },
-    3: { x: 1,  y: 1 },
-    4: { x: 0,  y: 1 },
-    5: { x: -1, y: 1 },
-    6: { x: -1, y: 0 },
-    7: { x: -1, y: -1 }
-};
+import usePuzzleLayout,{DIRECTION_VECTORS}  from './puzzle.js'
+/**
+ *
+ * @param type {Number}  0: vertex rendering, 1:edge rendering, 2:face rendering
+ * @param element {Object} Object(s) found at vertex
+ */
+function renderElements(type, element) {
+    if (type === 0) {
+    }
+}
 
 export default function PuzzlePanel({ puzzle, playerPath = ['v0'] }) {
     const CELL_SIZE = 80;
     const PADDING = 40; // Gives breathing room for start/end caps
+    const puzzleScaleFactor = 1/puzzle.style.scale
 
     // Stage 1 Calculation
     const { vertices, puzzleWidth, puzzleHeight } = useMemo(
@@ -44,6 +43,7 @@ export default function PuzzlePanel({ puzzle, playerPath = ['v0'] }) {
     const getFaceCentroid = (faceEdgeIds) => {
         let sumX = 0, sumY = 0, count = 0;
         const uniqueVertexIds = new Set();
+
 
         faceEdgeIds.forEach(eId => {
             const edge = puzzle.topology.edges[eId];
@@ -104,17 +104,17 @@ export default function PuzzlePanel({ puzzle, playerPath = ['v0'] }) {
                     const element = puzzle.elements.edges?.[eId];
 
                     return (
-                        <>
+                        <g key={eId}>
                             {element?.id !== "l_break" && (
                                 <line
                                     key={eId}
                                     x1={x1} y1={y1} x2={x2} y2={y2}
                                     stroke={puzzle.style.colors.pColor}
-                                    strokeWidth={16}
+                                    strokeWidth={16 * puzzleScaleFactor}
                                     strokeLinecap="round"
                                 />
                             )}
-                        </>
+                        </g>
                     );
                 })}
 
@@ -125,14 +125,34 @@ export default function PuzzlePanel({ puzzle, playerPath = ['v0'] }) {
                     const y = pos.y + PADDING;
                     const element = puzzle.elements.vertices?.[vId];
 
+                    var nodeIsSquare = false
+                    if ("edges" in puzzle.elements) {
+                        var numValidEdges = connectedEdges.length
+                        connectedEdges.forEach(edge => {
+                            if (edge in puzzle.elements.edges) {
+                                if (puzzle.elements.edges[edge].id === "l_break") {
+                                    numValidEdges-= 1;
+                                }
+                            }
+                            if (numValidEdges < 2) nodeIsSquare = true;
+                        })
+                    }
                     return (
                         <g key={vId}>
                             {/* Standard geometric node intersection point */}
-                            <circle cx={x} cy={y} r={8} fill={puzzle.style.colors.pColor} />
+                            {nodeIsSquare && (
+                                <rect x={x-8} y={y-8} height={16 * puzzleScaleFactor} width={16 * puzzleScaleFactor} fill={puzzle.style.colors.pColor} />
+                            )}
+                            {!nodeIsSquare && (
+                                <circle cx={x} cy={y} r={8 * puzzleScaleFactor} fill={puzzle.style.colors.pColor} />
+                            )}
+
+
+                            {/* Check for Full Breaks, and square them out */}
 
                             {/* Witness Start Element Anchor point */}
                             {element?.id === 'start' && (
-                                <circle cx={x} cy={y} r={20} fill={puzzle.style.colors.pColor} />
+                                <circle cx={x} cy={y} r={20 * puzzleScaleFactor} fill={puzzle.style.colors.pColor} />
                             )}
 
                             {/* Witness Exit Cap Line Element point */}
@@ -142,9 +162,9 @@ export default function PuzzlePanel({ puzzle, playerPath = ['v0'] }) {
                                 return (
                                     <line
                                         x1={x} y1={y}
-                                        x2={x + vec.x * 24} y2={y + vec.y * 24}
+                                        x2={x + vec.x * 18 * puzzleScaleFactor} y2={y + vec.y * 18 * puzzleScaleFactor}
                                         stroke={puzzle.style.colors.pColor}
-                                        strokeWidth={16}
+                                        strokeWidth={16 * puzzleScaleFactor}
                                         strokeLinecap="round"
                                     />
                                 );
@@ -172,6 +192,47 @@ export default function PuzzlePanel({ puzzle, playerPath = ['v0'] }) {
                     );
                 })}
                 <rect width="100%" height="100%" fill="url(#vignette)" pointer-events="none" />
+
+
+
+
+                {/* LAYER 5: INTERACTIVE COLLISION BLOCK OVERLAY (Place at bottom of SVG) */}
+                <g style={{ cursor: 'pointer' }}>
+
+                    {/* Line / Edge Hover Collision Boundaries */}
+                    {Object.entries(puzzle.topology.edges).map(([eId, edge]) => {
+                        const { x1, y1, x2, y2 } = getEdgePoints(edge);
+
+                        return (
+                            <line
+                                key={`hitbox-edge-${eId}`}
+                                x1={x1} y1={y1} x2={x2} y2={y2}
+                                stroke="transparent"
+                                strokeWidth={28} // Thick collision zone for easy tracking
+                                strokeLinecap="round"
+                                onMouseEnter={() => handleEdgeHover(eId, edge)}
+                            />
+                        );
+                    })}
+
+                    {/* Intersection / Vertex Hover Collision Points */}
+                    {Object.entries(puzzle.topology.vertices).map(([vId, connectedEdges]) => {
+                        const pos = vertices[vId];
+                        const x = pos.x + PADDING;
+                        const y = pos.y + PADDING;
+
+                        return (
+                            <circle
+                                key={`hitbox-vertex-${vId}`}
+                                cx={x} cy={y}
+                                r={18} // Large hover tracking radius
+                                fill="transparent"
+                                onMouseEnter={() => handleVertexHover(vId)}
+                                onMouseDown={(e) => handleStartDrawing(vId, e)}
+                            />
+                        );
+                    })}
+                </g>
 
             </svg>
         </div>

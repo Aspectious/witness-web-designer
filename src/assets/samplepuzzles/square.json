@@ -12,7 +12,8 @@
       "pColor": "#151e36",
       "lColor": "#d8dfed",
       "sColor": "#95aff5"
-    }
+    },
+    "scale": 1
   },
   "topology": {
     "vertices": {
@@ -22,10 +23,10 @@
       "v3": [ "e3", "e2" ]
     },
     "edges": {
-      "e0": {"va": "v0","vb": "v1", "dir": 2, "faces": ["f0"]},
+      "e0": {"va": "v0","vb": "v1", "dir": 4, "faces": ["f0"]},
       "e1": {"va": "v0","vb": "v2", "dir": 0, "faces": ["f0"]},
       "e2": {"va": "v1","vb": "v3", "dir": 0, "faces": ["f0"]},
-      "e3": {"va": "v2","vb": "v3", "dir": 2, "faces": ["f0"]}
+      "e3": {"va": "v2","vb": "v3", "dir": 4, "faces": ["f0"]}
     },
     "faces": {
       "f0": ["e0","e1","e2","e3"]
