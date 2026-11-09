@@ -1,0 +1,47 @@
+[
+  {
+    "id": "start",
+    "description": "Puzzle Start Node",
+    "properties": [
+      "inh:inh:start"
+    ]
+  },
+  {
+    "id": "end",
+    "description": "Puzzle End Node",
+    "properties": [
+      "inh:inh:end",
+      "opt:int:dir"
+    ]
+  },
+  {
+    "id": "break",
+    "description": "Break",
+    "properties": [
+      "inh:inh:path_disallow_partial"
+    ]
+  },
+  {
+    "id": "l_break",
+    "description": "Major Break",
+    "properties": [
+      "inh:inh:path_disallow"
+    ]
+  },
+  {
+    "id": "dot",
+    "description": "Path Required",
+    "properties": [
+      "req:bool:colorless",
+      "opt:color:line_color"
+    ]
+  },
+  {
+    "id": "color",
+    "description": "Separation Required",
+    "properties": [
+      "req:color:color"
+    ]
+
+  }
+]
